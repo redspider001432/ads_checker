@@ -7,11 +7,13 @@ from sklearn.feature_extraction.text import HashingVectorizer
 from sklearn.linear_model import PassiveAggressiveClassifier
 import pandas as pd
 import re
-
+import skillNer
+from transformers import pipeline
 UPLOAD_FOLDER = './src/uploads'
 ALLOWED_EXTENSIONS = {'pdf', 'docx'}
 MODEL_PATH = './src/name_model.joblib'
 DATASET_PATH = './src/names_dataset.csv'
+
 
 app = Flask(__name__)
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
@@ -124,6 +126,16 @@ def uploaded_file(filename):
                 print(f"Found emails: {', '.join(emails)}")
     
     return f"File {filename} processed successfully! Names added to training data."
+
+def extract_skills(text):
+    skill_extractor = pipeline(
+    "token-classification",
+    model="michiyasunaga/BioLinkBERT-base-skill-extraction",
+    aggregation_strategy="simple"
+    )
+    text = text
+    skills = [x['word'] for x in skill_extractor(text) if x['entity_group'] == 'SKILL']
+    print(skills)
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000)
